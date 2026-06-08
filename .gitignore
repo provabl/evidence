@@ -1,0 +1,5 @@
+/dist/
+*.test
+*.out
+vendor/
+.DS_Store

@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: 2026 Scott Friedman
+# SPDX-License-Identifier: Apache-2.0
+
+# evidence is a Go library (plus a cmd/slice demo), not a user-facing CLI, so
+# there is no cross-OS binary matrix to release. Consumers depend on it as a
+# module. This workflow cuts a GitHub release on a vX.Y.Z tag and produces a
+# signed SBOM with SLSA build provenance for the module source.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write       # create the release
+  id-token: write       # OIDC for SLSA provenance + SBOM attestation
+  attestations: write   # GitHub attestation API
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify module builds and tests
+        run: |
+          go build ./...
+          go test -race ./...
+
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
+          sbom-path: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
+
+      - name: Create release with SBOM
+        uses: softprops/action-gh-release@v2
+        with:
+          files: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
+          fail_on_unmatched_files: true
+          generate_release_notes: true
