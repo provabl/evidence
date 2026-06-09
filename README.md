@@ -20,11 +20,14 @@ sitting one layer below Cedar.
 Appraisal produces a verdict; Cedar acts on it. The kernel is the evidence
 layer; `attest` stays the policy decision point. Each provabl capability
 (`vet`, `nitro`, `qualify`, `attest`) becomes one `(ASP, appraiser)` pair
-registered against the kernel.
+registered against the kernel. Two are implemented here: **`vet`** (supply-chain
+provenance — freshness rides the kernel's outer SIG) and **`nitro`** (enclave
+attestation — the appraiser binds the run's nonce natively against the NSM
+document and verifies it to the `aws-nitro` trust root).
 
 ```bash
 go test ./...          # green
-go run ./cmd/slice     # kernel + vet, end to end
+go run ./cmd/slice     # kernel + vet + nitro, end to end
 ```
 
 ```

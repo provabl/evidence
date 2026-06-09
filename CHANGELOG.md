@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added
+
+- **`providers/nitro`** — the second registered `(ASP, appraiser)` pair: runtime/enclave
+  attestation via AWS Nitro. It is the Nitro shape — the appraiser performs **native nonce
+  binding** (the NSM document must carry the run's issued challenge), verifies the COSE_Sign1
+  signature against the `aws-nitro` trust root, enforces a PCR policy from `expected_pcr<N>`
+  params, and emits `platform.*` claims (`nitro_attested`, `module_id`, `nonce_verified`,
+  `signature_valid`, `pcr0/1/2/8`). COSE/CBOR decode and X.509 chain verification are behind
+  injected `Source`/`Verifier` interfaces, so the kernel module stays stdlib-only. No NSM device
+  / not in an enclave surfaces as `CollectFailed`.
+- **`cmd/slice`** now demonstrates both providers end to end (vet riding the kernel's outer SIG,
+  nitro binding the nonce natively).
+
 ## [0.1.0] - 2026-06-08
 
 ### Added
