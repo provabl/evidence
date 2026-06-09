@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Scott Friedman
 // SPDX-License-Identifier: Apache-2.0
 
-// Command slice is a runnable end-to-end demonstration of the founding kernel:
-// it registers the vet pair, runs the canonical Signed(Seq(Nonce, Meas)) term
-// against an in-memory provenance bundle, appraises, and prints the resulting
-// Cedar-shaped attributes. It uses no network and no external trust roots; it
-// exists so `go run ./cmd/slice` shows the loop working.
+// Command slice is a runnable end-to-end demonstration of the kernel with both
+// registered providers: it runs the canonical Signed(Seq(Nonce, Meas)) term for
+// vet (supply-chain provenance, freshness on the kernel's outer SIG) and for
+// nitro (enclave attestation, native nonce binding), appraises each, and prints
+// the resulting Cedar-shaped attributes. It uses no network and no real trust
+// roots; it exists so `go run ./cmd/slice` shows the loop working for both shapes.
 package main
 
 import (
@@ -18,6 +19,7 @@ import (
 	"github.com/provabl/evidence/cvm"
 	"github.com/provabl/evidence/ev"
 	"github.com/provabl/evidence/lower"
+	"github.com/provabl/evidence/providers/nitro"
 	"github.com/provabl/evidence/providers/vet"
 	"github.com/provabl/evidence/term"
 	"github.com/provabl/evidence/trust"
@@ -37,7 +39,17 @@ type store struct{ pub ed25519.PublicKey }
 func (s store) Verify(_ string, msg, sig []byte) (bool, error) {
 	return ed25519.Verify(s.pub, msg, sig), nil
 }
-func (s store) Root(string) (trust.Root, bool) { return trust.Root{}, false }
+
+// Root serves the aws-nitro root the nitro appraiser resolves. Material is a
+// placeholder here; production supplies the real AWS Nitro PKI root.
+func (s store) Root(name string) (trust.Root, bool) {
+	if name == nitro.RootName {
+		return trust.Root{Name: nitro.RootName, Material: []byte("demo-aws-nitro-root")}, true
+	}
+	return trust.Root{}, false
+}
+
+// --- vet stub source/verifier ---
 
 type src struct{}
 
@@ -49,27 +61,63 @@ type ver struct{}
 
 func (ver) Verify(context.Context, []byte) (bool, error) { return true, nil }
 
+// --- nitro stub source/verifier ---
+
+// nitroSrc echoes the run's challenge as the document nonce (the real NSM device
+// embeds the caller-supplied nonce) and returns fabricated PCRs.
+type nitroSrc struct{}
+
+func (nitroSrc) Fetch(_ context.Context, _ term.Target, nonce []byte) (nitro.NSMDoc, error) {
+	return nitro.NSMDoc{
+		ModuleID: "i-0abc123.enclave",
+		Nonce:    nonce,
+		PCRs:     map[string]string{"0": "7fb5c5…", "1": "235c9e…", "2": "0f0ac3…", "8": "70da58…"},
+		Raw:      []byte("demo-cose-sign1"),
+	}, nil
+}
+
+type nitroVer struct{}
+
+func (nitroVer) Verify(context.Context, []byte, trust.Root) (bool, error) { return true, nil }
+
 func main() {
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	reg := asp.NewRegistry()
 	if err := reg.Register(vet.Provider(src{}, ver{})); err != nil {
 		panic(err)
 	}
+	if err := reg.Register(nitro.Provider(nitroSrc{}, nitroVer{})); err != nil {
+		panic(err)
+	}
 	c := cvm.New(reg, signer{priv, "provabl-am-v1"}, store{pub}, nil)
 
-	protocol := term.Seq(
+	// vet: supply-chain provenance; freshness rides the kernel's outer SIG.
+	runDemo(c, "vet — supply-chain provenance", term.Seq(
 		term.Nonce(),
 		term.Seq(
 			term.Meas(term.Self, vet.ID, "artifact://pipeline:v1.2", term.Params{"min_slsa_level": "2"}),
 			term.Sig(),
 		),
-	)
+	))
 
+	// nitro: enclave attestation; the document binds the run's nonce natively.
+	runDemo(c, "nitro — enclave attestation (native nonce binding)", term.Seq(
+		term.Nonce(),
+		term.Seq(
+			term.Meas(term.Self, nitro.ID, "nitro://self", term.Params{"expected_pcr0": "7fb5c5…"}),
+			term.Sig(),
+		),
+	))
+}
+
+// runDemo runs one protocol through the CVM, appraises it, and prints the bundle,
+// verdict, and lowered Cedar attributes.
+func runDemo(c *cvm.CVM, title string, protocol *term.Term) {
+	fmt.Printf("\n=== %s ===\nevidence bundle:\n", title)
 	bundle, ch, err := c.Run(context.Background(), protocol)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("evidence bundle:")
 	printEv(bundle, 1)
 
 	v, err := c.Appraise(context.Background(), bundle, ch)
@@ -86,7 +134,7 @@ func main() {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		fmt.Printf("  %-26s = %-8s (%s)\n", k, attrs[k].Value, attrs[k].Type)
+		fmt.Printf("  %-26s = %-10s (%s)\n", k, attrs[k].Value, attrs[k].Type)
 	}
 }
 
