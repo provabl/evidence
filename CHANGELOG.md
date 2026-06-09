@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-09
+
 ### Added
 
 - **`providers/nitro`** — the second registered `(ASP, appraiser)` pair: runtime/enclave
@@ -48,5 +50,6 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - Conformance tests in `cvm/slice_test.go` covering pass, sub-policy fail, freshness
   (nonce mismatch), and registry half-pair rejection.
 
-[Unreleased]: https://github.com/provabl/evidence/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/provabl/evidence/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/provabl/evidence/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/provabl/evidence/releases/tag/v0.1.0
