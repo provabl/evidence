@@ -55,4 +55,4 @@ apply the nonce/SIG/HSH built-ins, dispatch appraisal. All domain meaning lives
 in the pairs. The day an ASP-specific branch appears in the kernel, the
 abstraction has failed.
 
-Apache-2.0 · © 2026 Scott Friedman
+Apache-2.0 · © 2026 Playground Logic LLC
