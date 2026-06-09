@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 Scott Friedman
+// SPDX-FileCopyrightText: 2026 Playground Logic LLC
 // SPDX-License-Identifier: Apache-2.0
 
 // Package ev defines the evidence a CVM produces: an inductive tree, not a
