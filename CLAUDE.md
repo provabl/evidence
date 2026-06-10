@@ -47,8 +47,10 @@ breaks one of these is wrong even if it compiles and passes tests.
 term/      protocol AST                 ev/        evidence tree + Canonical
 trust/     Signer + multi-root Store    asp/       pair contract + Registry
 cvm/       interpreter + Appraise       lower/     claims -> Cedar attributes
-providers/vet/   first registered pair
-cmd/slice/       runnable end-to-end demo
+providers/vet/   first registered pair (non-Nitro shape; freshness on outer SIG)
+providers/nitro/ enclave attestation (NSM doc; native nonce binding)
+providers/nitrotpm/ boot-chain attestation (TPM 2.0 quote; native nonce binding)
+cmd/slice/       runnable end-to-end demo (all three providers)
 ```
 
 ## Commands

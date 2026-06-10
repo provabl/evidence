@@ -20,6 +20,7 @@ import (
 	"github.com/provabl/evidence/ev"
 	"github.com/provabl/evidence/lower"
 	"github.com/provabl/evidence/providers/nitro"
+	"github.com/provabl/evidence/providers/nitrotpm"
 	"github.com/provabl/evidence/providers/vet"
 	"github.com/provabl/evidence/term"
 	"github.com/provabl/evidence/trust"
@@ -40,11 +41,15 @@ func (s store) Verify(_ string, msg, sig []byte) (bool, error) {
 	return ed25519.Verify(s.pub, msg, sig), nil
 }
 
-// Root serves the aws-nitro root the nitro appraiser resolves. Material is a
-// placeholder here; production supplies the real AWS Nitro PKI root.
+// Root serves the named roots the platform appraisers resolve (aws-nitro for the
+// enclave provider, aws-tpm for the boot-chain provider). Material is a placeholder
+// here; production supplies the real AWS PKI roots.
 func (s store) Root(name string) (trust.Root, bool) {
-	if name == nitro.RootName {
+	switch name {
+	case nitro.RootName:
 		return trust.Root{Name: nitro.RootName, Material: []byte("demo-aws-nitro-root")}, true
+	case nitrotpm.RootName:
+		return trust.Root{Name: nitrotpm.RootName, Material: []byte("demo-aws-tpm-root")}, true
 	}
 	return trust.Root{}, false
 }
@@ -80,6 +85,26 @@ type nitroVer struct{}
 
 func (nitroVer) Verify(context.Context, []byte, trust.Root) (bool, error) { return true, nil }
 
+// --- nitrotpm stub source/verifier ---
+
+// tpmSrc echoes the run's challenge as the quote's qualifyingData (a real
+// TPM2_Quote binds the caller-supplied nonce) and returns fabricated boot-chain
+// PCRs (0=UEFI firmware, 4=bootloader, 7=secure-boot policy).
+type tpmSrc struct{}
+
+func (tpmSrc) Fetch(_ context.Context, _ term.Target, nonce []byte) (nitrotpm.TPMQuote, error) {
+	return nitrotpm.TPMQuote{
+		Nonce:           nonce,
+		PCRs:            map[string]string{"0": "3d458c…", "4": "a1b2c3…", "7": "9f8e7d…"},
+		FirmwareVersion: "2.0",
+		Raw:             []byte("demo-tpms-attest"),
+	}, nil
+}
+
+type tpmVer struct{}
+
+func (tpmVer) Verify(context.Context, []byte, trust.Root) (bool, error) { return true, nil }
+
 func main() {
 	pub, priv, _ := ed25519.GenerateKey(nil)
 	reg := asp.NewRegistry()
@@ -87,6 +112,9 @@ func main() {
 		panic(err)
 	}
 	if err := reg.Register(nitro.Provider(nitroSrc{}, nitroVer{})); err != nil {
+		panic(err)
+	}
+	if err := reg.Register(nitrotpm.Provider(tpmSrc{}, tpmVer{})); err != nil {
 		panic(err)
 	}
 	c := cvm.New(reg, signer{priv, "provabl-am-v1"}, store{pub}, nil)
@@ -105,6 +133,16 @@ func main() {
 		term.Nonce(),
 		term.Seq(
 			term.Meas(term.Self, nitro.ID, "nitro://self", term.Params{"expected_pcr0": "7fb5c5…"}),
+			term.Sig(),
+		),
+	))
+
+	// nitrotpm: boot-chain attestation via TPM 2.0; the quote binds the run's nonce
+	// natively in its qualifyingData. Sibling of nitro — same shape, different source.
+	runDemo(c, "nitrotpm — boot-chain attestation (native nonce binding)", term.Seq(
+		term.Nonce(),
+		term.Seq(
+			term.Meas(term.Self, nitrotpm.ID, "tpm://self", term.Params{"expected_pcr0": "3d458c…"}),
 			term.Sig(),
 		),
 	))

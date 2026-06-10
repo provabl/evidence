@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added
+
+- **`providers/nitrotpm`** (evidence#6): a third registered `(ASP, appraiser)` pair — boot-chain
+  attestation of a regular EC2 instance via a TPM 2.0 quote, sibling to the `nitro` enclave
+  provider. Same kernel contract (injected `Source`/`Verifier`, native nonce binding on the quote's
+  qualifyingData, PCR policy), distinct `platform.tpm_*` claim namespace (no collision with the
+  enclave provider's `platform.nitro_*`). Hardware-free stub tests; the kernel stays stdlib-only
+  (no new go.mod deps). The real TPM-quote `Source` (`/dev/tpmrm0` + `TPM2_Quote`) and signature
+  `Verifier` (go-tpm/x509) are the producer half, deferred and producer-agnostic. `cmd/slice` now
+  demonstrates all three providers.
+
 ### Changed
 
 - Copyright holder normalized to Playground Logic LLC.
