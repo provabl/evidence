@@ -24,12 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -59,7 +59,7 @@ jobs:
           sbom-path: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
 
       - name: Create release with SBOM
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: evidence-${{ steps.version.outputs.VERSION }}.spdx.json
           fail_on_unmatched_files: true
