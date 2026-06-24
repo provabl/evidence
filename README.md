@@ -25,6 +25,18 @@ provenance — freshness rides the kernel's outer SIG) and **`nitro`** (enclave
 attestation — the appraiser binds the run's nonce natively against the NSM
 document and verifies it to the `aws-nitro` trust root).
 
+Unlike the other tools, the kernel is a **library others import**, not a service
+they hand off to — the dependency points *inward* (tools → evidence), never out:
+
+```mermaid
+flowchart LR
+    vet["vet"] -->|"imports"| ev["<b>evidence</b><br/>kernel: terms · typed evidence ·<br/>appraisal · freshness spine"]
+    nitro["nitro"] -->|"imports"| ev
+    tpm["tpm"] -->|"imports"| ev
+    qualify["qualify"] -->|"imports"| ev
+    ev -->|"lower.ToAttributes"| attrs["Cedar attributes<br/>(written by each tool, read by attest)"]
+```
+
 ```bash
 go test ./...          # green
 go run ./cmd/slice     # kernel + vet + nitro, end to end
