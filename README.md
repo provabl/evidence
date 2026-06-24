@@ -25,6 +25,15 @@ provenance — freshness rides the kernel's outer SIG) and **`nitro`** (enclave
 attestation — the appraiser binds the run's nonce natively against the NSM
 document and verifies it to the `aws-nitro` trust root).
 
+## Core concepts
+
+(terms link to the suite [glossary](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md))
+
+- **[Copland](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#copland) model** — terms (what to measure), typed evidence, [appraisal](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#appraisal--appraiser) (the verdict), and [freshness](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#freshness--nonce) — in Go, without the formal proofs.
+- **[`(ASP, appraiser)` pair](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#asp-attestation-service-provider)** — the unit of extension: a measurer + the judge for what it measured. Each capability (vet/nitro/tpm/qualify) registers one; the kernel refuses half a pair.
+- **Freshness spine** — the kernel owns the [nonce](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#freshness--nonce)/SIG/HSH challenge so an attribute is *appraised and fresh*, not a bare assertion.
+- **[Lowered attribute](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#lowered-attribute)** — `lower.ToAttributes` turns a verdict into the [Cedar](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#cedar) attributes the importing tools persist; attest consumes those. **attest stays the [PDP](https://github.com/provabl/provabl/blob/main/docs/guide/glossary.md#pdp-policy-decision-point); the kernel never decides.**
+
 Unlike the other tools, the kernel is a **library others import**, not a service
 they hand off to — the dependency points *inward* (tools → evidence), never out:
 
