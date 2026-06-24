@@ -60,6 +60,18 @@ lowered Cedar attributes:
   workload.subject_digest    = sha256:1f3a… (string)
 ```
 
+## Install
+
+evidence is a **library**, not a CLI — the other tools import it; there is no binary to install
+(`cmd/slice` is a runnable end-to-end demo, not a product). Add it as a dependency:
+
+```bash
+go get github.com/provabl/evidence@latest   # requires Go 1.26.4+
+```
+
+**Prerequisites.** Go 1.26.4+ only — the kernel is **stdlib-only** (no third-party, no AWS). A
+capability uses it by registering one `(ASP, appraiser)` pair; see `ARCHITECTURE.md` for the contract.
+
 See `ARCHITECTURE.md` for the contract and `CLAUDE.md` for the build guide.
 
 The one rule: the kernel does exactly five things — route, thread, stamp place,
