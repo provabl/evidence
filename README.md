@@ -9,7 +9,7 @@ Part of the [Provabl](https://provabl.dev) suite:
 - **[vet](https://vet.provabl.dev)** — verify the software supply chain
 - **evidence** — the attestation layer the others gather and appraise evidence through ← you are here
 
-> Ground your infrastructure, attest your controls, qualify your people, vet your software.
+> Ground your infrastructure, attest your controls, qualify your people, vet your software, steward your data.
 
 ---
 
