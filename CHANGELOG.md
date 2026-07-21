@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-21
+
 ### Changed
 
 - **Bump Go 1.26.4 → 1.26.5** to keep the suite on one patched toolchain (the fleet-wide bump clearing GO-2026-5856, a `crypto/tls` stdlib advisory). evidence is stdlib-only and makes no TLS calls, so it was never affected — this is consistency, not a fix.
@@ -75,7 +77,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - Conformance tests in `cvm/slice_test.go` covering pass, sub-policy fail, freshness
   (nonce mismatch), and registry half-pair rejection.
 
-[Unreleased]: https://github.com/provabl/evidence/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/provabl/evidence/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/provabl/evidence/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/provabl/evidence/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/provabl/evidence/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/provabl/evidence/releases/tag/v0.1.0
