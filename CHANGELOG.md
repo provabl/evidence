@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- **Bump Go 1.26.4 → 1.26.5** to keep the suite on one patched toolchain (the fleet-wide bump clearing GO-2026-5856, a `crypto/tls` stdlib advisory). evidence is stdlib-only and makes no TLS calls, so it was never affected — this is consistency, not a fix.
+
 ### Added
 
 - **Added a `Security Scan` workflow** (`.github/workflows/security.yml`): govulncheck + Trivy filesystem (dependency) + Trivy IaC scans on every push/PR and weekly, blocking on HIGH/CRITICAL. Trivy pinned to `v0.36.0`. Brings this repo in line with the rest of the suite — every Provabl tool now self-scans, fitting a security/compliance suite. The standalone govulncheck job moved out of `ci.yaml` into this workflow (no longer duplicated).
